@@ -2,7 +2,9 @@
 
 A local-first, portfolio-ready SaaS-style job application tracker for developers and job seekers. Track applications, analyze CV fit, manage documents, and visualize your job search — all running in the browser with zero backend dependencies.
 
-**Live Demo:** _Add your Vercel deployment URL here_
+**Live Demo:** [https://geron1mmo.github.io/applypilot-ai-pro/](https://geron1mmo.github.io/applypilot-ai-pro/)
+
+**GitHub:** [https://github.com/Geron1mmo/applypilot-ai-pro](https://github.com/Geron1mmo/applypilot-ai-pro)
 
 ## Screenshots
 
@@ -128,7 +130,7 @@ git init
 git add .
 git commit -m "Initial commit: ApplyPilot AI Pro"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/applypilot-ai-pro.git
+git remote add origin https://github.com/Geron1mmo/applypilot-ai-pro.git
 git push -u origin main
 ```
 
