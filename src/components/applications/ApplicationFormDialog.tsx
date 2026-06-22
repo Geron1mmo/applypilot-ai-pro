@@ -3,6 +3,7 @@ import type { Application, ApplicationStatus, ApplicationPriority, WorkMode } fr
 import { buildApplicationUpdate } from "@/lib/applications"
 import { applicationSchema } from "@/lib/validation"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -35,6 +36,7 @@ export function ApplicationFormDialog({
   onSave,
 }: Props) {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [form, setForm] = useState({
     company: "",
@@ -164,104 +166,104 @@ export function ApplicationFormDialog({
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {application ? "Edit Application" : "New Application"}
+            {application ? t("applications.edit") : t("applications.new")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Company *</Label>
+              <Label>{t("applications.company")} *</Label>
               <Input value={form.company} onChange={(e) => set("company", e.target.value)} />
               {errors.company && <p className="text-xs text-destructive">{errors.company}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Job Title *</Label>
+              <Label>{t("applications.role")} *</Label>
               <Input value={form.role} onChange={(e) => set("role", e.target.value)} />
               {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Location</Label>
+              <Label>{t("applications.location")}</Label>
               <Input value={form.location} onChange={(e) => set("location", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Work Mode</Label>
+              <Label>{t("applications.workMode")}</Label>
               <Select value={form.workMode} onValueChange={(v) => set("workMode", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="remote">Remote</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                  <SelectItem value="onsite">On-site</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Salary Min</Label>
-              <Input type="number" value={form.salaryMin} onChange={(e) => set("salaryMin", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Salary Max</Label>
-              <Input type="number" value={form.salaryMax} onChange={(e) => set("salaryMax", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => set("status", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(["saved","applied","interview","technical","offer","rejected"] as const).map((s) => (
-                    <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                  {(["remote", "hybrid", "onsite"] as const).map((m) => (
+                    <SelectItem key={m} value={m}>{t(`workMode.${m}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Priority</Label>
-              <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
+              <Label>{t("applications.salaryMin")}</Label>
+              <Input type="number" value={form.salaryMin} onChange={(e) => set("salaryMin", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("applications.salaryMax")}</Label>
+              <Input type="number" value={form.salaryMax} onChange={(e) => set("salaryMax", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("applications.status")}</Label>
+              <Select value={form.status} onValueChange={(v) => set("status", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
+                  {(["saved","applied","interview","technical","offer","rejected"] as const).map((s) => (
+                    <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Job URL</Label>
+              <Label>{t("applications.priority")}</Label>
+              <Select value={form.priority} onValueChange={(v) => set("priority", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(["low", "medium", "high"] as const).map((p) => (
+                    <SelectItem key={p} value={p}>{t(`priority.${p}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("applications.jobUrl")}</Label>
               <Input value={form.jobUrl} onChange={(e) => set("jobUrl", e.target.value)} placeholder="https://" />
               {errors.jobUrl && <p className="text-xs text-destructive">{errors.jobUrl}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>HR Email</Label>
+              <Label>{t("applications.hrEmail")}</Label>
               <Input value={form.hrEmail} onChange={(e) => set("hrEmail", e.target.value)} />
               {errors.hrEmail && <p className="text-xs text-destructive">{errors.hrEmail}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>HR Contact</Label>
+              <Label>{t("applications.hrContact")}</Label>
               <Input value={form.hrName} onChange={(e) => set("hrName", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Deadline</Label>
+              <Label>{t("applications.deadline")}</Label>
               <Input type="date" value={form.deadline} onChange={(e) => set("deadline", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Date Applied</Label>
+              <Label>{t("applications.dateApplied")}</Label>
               <Input type="date" value={form.dateApplied} onChange={(e) => set("dateApplied", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Interview Date</Label>
+              <Label>{t("applications.interviewDate")}</Label>
               <Input type="date" value={form.interviewDate} onChange={(e) => set("interviewDate", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Follow-up Date</Label>
+              <Label>{t("applications.followUpDate")}</Label>
               <Input type="date" value={form.followUpDate} onChange={(e) => set("followUpDate", e.target.value)} />
             </div>
           </div>
           {application && application.statusHistory.length > 0 && (
             <div className="space-y-1.5">
-              <Label>Status History</Label>
+              <Label>{t("applications.statusHistory")}</Label>
               <div className="rounded-lg border border-border p-3 text-xs text-muted-foreground space-y-1 max-h-24 overflow-y-auto">
                 {[...application.statusHistory].reverse().map((entry, i) => (
                   <div key={i} className="flex justify-between">
-                    <span className="capitalize">{entry.status}</span>
+                    <span>{t(`status.${entry.status}`)}</span>
                     <span>{new Date(entry.changedAt).toLocaleDateString()}</span>
                   </div>
                 ))}
@@ -269,16 +271,16 @@ export function ApplicationFormDialog({
             </div>
           )}
           <div className="space-y-1.5">
-            <Label>Notes</Label>
+            <Label>{t("applications.notes")}</Label>
             <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />
           </div>
           <div className="space-y-1.5">
-            <Label>Job Description</Label>
+            <Label>{t("applications.jobDescription")}</Label>
             <Textarea value={form.jobDescription} onChange={(e) => set("jobDescription", e.target.value)} rows={4} />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit">{application ? "Save Changes" : "Add Application"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+            <Button type="submit">{application ? t("applications.saveChanges") : t("applications.add")}</Button>
           </div>
         </form>
       </DialogContent>

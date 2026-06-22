@@ -1,7 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n()
   const { user, isLoading } = useAuth()
   const location = useLocation()
 
@@ -10,7 +12,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )

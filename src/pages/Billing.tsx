@@ -1,4 +1,5 @@
 import { Check, CreditCard } from "lucide-react"
+import { useI18n } from "@/contexts/I18nContext"
 import { useApplications } from "@/hooks/useApplications"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,33 +13,46 @@ import {
 } from "@/components/ui/table"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-const features = [
-  { name: "Job applications", free: "Unlimited", pro: "Unlimited" },
-  { name: "CV analyzer", free: true, pro: true },
-  { name: "Kanban board", free: true, pro: true },
-  { name: "Analytics", free: true, pro: true },
-  { name: "Document storage", free: true, pro: true },
-  { name: "Cloud sync", free: false, pro: "Coming soon" },
-  { name: "Team collaboration", free: false, pro: "Coming soon" },
-  { name: "AI cover letters", free: false, pro: "Coming soon" },
-]
-
 export function Billing() {
+  const { t } = useI18n()
   const { applications } = useApplications()
+
+  const features = [
+    { nameKey: "nav.applications", free: t("billing.unlimited"), pro: t("billing.unlimited") },
+    { nameKey: "nav.cvAnalyzer", free: true, pro: true },
+    { nameKey: "nav.kanban", free: true, pro: true },
+    { nameKey: "nav.analytics", free: true, pro: true },
+    { nameKey: "nav.documents", free: true, pro: true },
+    { nameKey: "billing.cloudSync", free: false, pro: t("common.comingSoon") },
+    { nameKey: "billing.teamCollab", free: false, pro: t("common.comingSoon") },
+    { nameKey: "billing.aiLetters", free: false, pro: t("common.comingSoon") },
+  ]
+
+  const freePlanFeatures = [
+    `${t("billing.unlimited")} ${t("nav.applications")}`,
+    t("analyzer.subtitle"),
+    t("nav.analytics"),
+    t("settings.exportJson"),
+  ]
+
+  const proPlanFeatures = [
+    t("billing.cloudSync"),
+    t("billing.aiLetters"),
+    t("billing.teamCollab"),
+  ]
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Billing</h1>
-        <p className="text-sm text-muted-foreground">Plan and usage overview</p>
+        <h1 className="text-2xl font-bold">{t("billing.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("billing.subtitle")}</p>
       </div>
 
       <Alert>
         <CreditCard className="size-4" />
-        <AlertTitle>Portfolio demo — no real billing</AlertTitle>
+        <AlertTitle>{t("billing.demoAlert")}</AlertTitle>
         <AlertDescription>
-          This page is a UI mockup for portfolio purposes. No payments are processed.
-          ApplyPilot AI Pro is completely free and runs locally.
+          {t("billing.demoAlertDesc")}
         </AlertDescription>
       </Alert>
 
@@ -46,19 +60,19 @@ export function Billing() {
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{applications.length}</p>
-            <p className="text-xs text-muted-foreground">Applications tracked</p>
+            <p className="text-xs text-muted-foreground">{t("billing.tracked")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">∞</p>
-            <p className="text-xs text-muted-foreground">CV analyses</p>
+            <p className="text-xs text-muted-foreground">{t("billing.analyses")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">$0</p>
-            <p className="text-xs text-muted-foreground">Monthly cost</p>
+            <p className="text-xs text-muted-foreground">{t("billing.monthlyCost")}</p>
           </CardContent>
         </Card>
       </div>
@@ -66,14 +80,14 @@ export function Billing() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-primary/30">
           <CardHeader>
-            <Badge className="w-fit">Current Plan</Badge>
-            <CardTitle>Free Local Plan</CardTitle>
-            <CardDescription>Everything you need, stored locally</CardDescription>
+            <Badge className="w-fit">{t("billing.currentPlan")}</Badge>
+            <CardTitle>{t("billing.freePlan")}</CardTitle>
+            <CardDescription>{t("billing.freePlanDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">$0<span className="text-base font-normal text-muted-foreground">/mo</span></p>
             <ul className="mt-4 space-y-2 text-sm">
-              {["Unlimited applications", "Local CV analyzer", "Full analytics", "Export/import"].map((f) => (
+              {freePlanFeatures.map((f) => (
                 <li key={f} className="flex items-center gap-2">
                   <Check className="size-4 text-emerald-400" /> {f}
                 </li>
@@ -84,14 +98,14 @@ export function Billing() {
 
         <Card className="opacity-60">
           <CardHeader>
-            <Badge variant="secondary" className="w-fit">Coming Soon</Badge>
-            <CardTitle>Pro Plan</CardTitle>
-            <CardDescription>Future cloud features (not available)</CardDescription>
+            <Badge variant="secondary" className="w-fit">{t("common.comingSoon")}</Badge>
+            <CardTitle>{t("billing.proPlan")}</CardTitle>
+            <CardDescription>{t("billing.proPlanDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">$12<span className="text-base font-normal text-muted-foreground">/mo</span></p>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {["Cloud sync", "AI cover letters", "Team sharing", "Priority support"].map((f) => (
+              {proPlanFeatures.map((f) => (
                 <li key={f} className="flex items-center gap-2">
                   <Check className="size-4" /> {f}
                 </li>
@@ -103,21 +117,21 @@ export function Billing() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Feature Comparison</CardTitle>
+          <CardTitle className="text-base">{t("billing.comparison")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Feature</TableHead>
-                <TableHead>Free Local</TableHead>
-                <TableHead>Pro (Coming Soon)</TableHead>
+                <TableHead>{t("billing.feature")}</TableHead>
+                <TableHead>{t("billing.freeCol")}</TableHead>
+                <TableHead>{t("billing.proCol")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {features.map((f) => (
-                <TableRow key={f.name}>
-                  <TableCell>{f.name}</TableCell>
+                <TableRow key={f.nameKey}>
+                  <TableCell>{t(f.nameKey)}</TableCell>
                   <TableCell>
                     {typeof f.free === "boolean" ? (
                       f.free ? <Check className="size-4 text-emerald-400" /> : "—"

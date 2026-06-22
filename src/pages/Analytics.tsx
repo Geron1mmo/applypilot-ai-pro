@@ -13,12 +13,24 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { useI18n } from "@/contexts/I18nContext"
 import { useApplications } from "@/hooks/useApplications"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { ApplicationStatus } from "@/types"
 
 const COLORS = ["#6366f1", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444"]
 
+const STATUS_KEYS: ApplicationStatus[] = [
+  "saved",
+  "applied",
+  "interview",
+  "technical",
+  "offer",
+  "rejected",
+]
+
 export function Analytics() {
+  const { t } = useI18n()
   const { applications } = useApplications()
 
   const metrics = useMemo(() => {
@@ -46,14 +58,10 @@ export function Analytics() {
       .filter((s): s is number => s !== null)
     const bestScore = scores.length ? Math.max(...scores) : 0
 
-    const statusData = [
-      { name: "Saved", value: applications.filter((a) => a.status === "saved").length },
-      { name: "Applied", value: applications.filter((a) => a.status === "applied").length },
-      { name: "Interview", value: applications.filter((a) => a.status === "interview").length },
-      { name: "Technical", value: applications.filter((a) => a.status === "technical").length },
-      { name: "Offer", value: applications.filter((a) => a.status === "offer").length },
-      { name: "Rejected", value: applications.filter((a) => a.status === "rejected").length },
-    ].filter((d) => d.value > 0)
+    const statusData = STATUS_KEYS.map((key) => ({
+      name: t(`status.${key}`),
+      value: applications.filter((a) => a.status === key).length,
+    })).filter((d) => d.value > 0)
 
     const monthlyMap = new Map<string, number>()
     applications.forEach((a) => {
@@ -70,21 +78,21 @@ export function Analytics() {
       total, interviewRate, offerRate, rejectionRate, avgSalary, bestScore,
       statusData, timelineData,
     }
-  }, [applications])
+  }, [applications, t])
 
   const statCards = [
-    { label: "Interview Rate", value: `${metrics.interviewRate}%` },
-    { label: "Offer Rate", value: `${metrics.offerRate}%` },
-    { label: "Rejection Rate", value: `${metrics.rejectionRate}%` },
-    { label: "Avg Salary", value: metrics.avgSalary ? `$${(metrics.avgSalary / 1000).toFixed(0)}k` : "—" },
-    { label: "Best CV Match", value: metrics.bestScore ? `${metrics.bestScore}%` : "—" },
+    { label: t("analytics.interviewRate"), value: `${metrics.interviewRate}%` },
+    { label: t("analytics.offerRate"), value: `${metrics.offerRate}%` },
+    { label: t("analytics.rejectionRate"), value: `${metrics.rejectionRate}%` },
+    { label: t("analytics.avgSalary"), value: metrics.avgSalary ? `$${(metrics.avgSalary / 1000).toFixed(0)}k` : "—" },
+    { label: t("analytics.bestMatch"), value: metrics.bestScore ? `${metrics.bestScore}%` : "—" },
   ]
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-sm text-muted-foreground">Insights into your job search performance</p>
+        <h1 className="text-2xl font-bold">{t("analytics.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("analytics.subtitle")}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -101,12 +109,12 @@ export function Analytics() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Applications by Status</CardTitle>
-            <CardDescription>Current pipeline breakdown</CardDescription>
+            <CardTitle>{t("analytics.byStatus")}</CardTitle>
+            <CardDescription>{t("analytics.byStatusDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {metrics.statusData.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">No data yet</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">{t("common.noData")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -124,12 +132,12 @@ export function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Applications Over Time</CardTitle>
-            <CardDescription>Monthly application volume</CardDescription>
+            <CardTitle>{t("analytics.overTime")}</CardTitle>
+            <CardDescription>{t("analytics.overTimeDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {metrics.timelineData.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">No timeline data yet</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">{t("common.noData")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={metrics.timelineData}>
@@ -147,11 +155,11 @@ export function Analytics() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Status Distribution</CardTitle>
+          <CardTitle>{t("analytics.distribution")}</CardTitle>
         </CardHeader>
         <CardContent>
           {metrics.statusData.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No data</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t("common.noData")}</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={metrics.statusData}>

@@ -2,6 +2,8 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Bell, Menu, Plus, Search } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +26,7 @@ function getInitials(name: string): string {
 
 export function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, logout } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
 
@@ -48,7 +51,7 @@ export function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
       <form onSubmit={handleSearch} className="relative hidden flex-1 max-w-md sm:block">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search applications..."
+          placeholder={t("nav.searchPlaceholder")}
           className="pl-9"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -56,13 +59,15 @@ export function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
       </form>
 
       <div className="ml-auto flex items-center gap-2">
+        <LanguageSwitcher className="hidden w-32 sm:flex" />
+
         <Button
           size="sm"
           className="hidden gap-1.5 sm:flex"
           onClick={() => navigate("/app/applications?action=new")}
         >
           <Plus className="size-4" />
-          New Application
+          {t("nav.newApplication")}
         </Button>
 
         <Button variant="ghost" size="icon" className="text-muted-foreground">
@@ -81,13 +86,13 @@ export function TopNav({ onMenuClick }: { onMenuClick: () => void }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => navigate("/app/profile")}>
-              Profile
+              {t("nav.profile")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/app/settings")}>
-              Settings
+              {t("nav.settings")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>{t("nav.logout")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

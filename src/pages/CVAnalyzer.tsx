@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { ScanSearch, Sparkles } from "lucide-react"
+import { Save, ScanSearch, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import type { CVAnalysis } from "@/types"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
+import { useApplications } from "@/hooks/useApplications"
+import { buildApplicationUpdate } from "@/lib/applications"
 import { analyzeCV } from "@/lib/cvAnalyzer"
 import { saveAnalysis, getAnalyses } from "@/lib/storage"
 import { truncateText } from "@/lib/sanitizer"
@@ -15,17 +18,23 @@ import { Textarea } from "@/components/ui/textarea"
 
 export function CVAnalyzer() {
   const { user } = useAuth()
+  const { t } = useI18n()
+  const { applications, upsert } = useApplications()
   const [searchParams] = useSearchParams()
   const [cvText, setCvText] = useState("")
   const [jobText, setJobText] = useState("")
   const [prefillCompany, setPrefillCompany] = useState<string | null>(null)
+  const [linkedAppId, setLinkedAppId] = useState<string | null>(null)
 
   useEffect(() => {
     const job = searchParams.get("job")
     const company = searchParams.get("company")
+    const appId = searchParams.get("appId")
     if (job) setJobText(job)
     if (company) setPrefillCompany(company)
+    if (appId) setLinkedAppId(appId)
   }, [searchParams])
+
   const [result, setResult] = useState<ReturnType<typeof analyzeCV> | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [history, setHistory] = useState<CVAnalysis[]>(() =>
@@ -34,7 +43,7 @@ export function CVAnalyzer() {
 
   const handleAnalyze = () => {
     if (!cvText.trim() || !jobText.trim()) {
-      toast.error("Please provide both CV and job description text")
+      toast.error(t("analyzer.needBoth"))
       return
     }
     setAnalyzing(true)
@@ -54,9 +63,23 @@ export function CVAnalyzer() {
         }
         saveAnalysis(record)
         setHistory(getAnalyses(user.id))
-        toast.success("Analysis saved to history")
+        toast.success(t("analyzer.savedHistory"))
       }
     }, 600)
+  }
+
+  const handleSaveToApp = () => {
+    if (!result || !linkedAppId) return
+    const app = applications.find((a) => a.id === linkedAppId)
+    if (!app) return
+    upsert(
+      buildApplicationUpdate(app, {
+        ...app,
+        cvMatchScore: result.matchScore,
+        updatedAt: new Date().toISOString(),
+      })
+    )
+    toast.success(t("analyzer.scoreSaved"))
   }
 
   const scoreColor =
@@ -64,16 +87,16 @@ export function CVAnalyzer() {
     result.matchScore >= 80 ? "text-emerald-400" :
     result.matchScore >= 60 ? "text-amber-400" : "text-red-400"
 
+  const linkedApp = linkedAppId ? applications.find((a) => a.id === linkedAppId) : null
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">CV Analyzer</h1>
-        <p className="text-sm text-muted-foreground">
-          Local skill-matching engine — no external AI APIs
-        </p>
+        <h1 className="text-2xl font-bold">{t("analyzer.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("analyzer.subtitle")}</p>
         {prefillCompany && (
           <p className="mt-1 text-sm text-primary">
-            Analyzing fit for <strong>{prefillCompany}</strong>
+            {t("analyzer.analyzingFor")} <strong>{prefillCompany}</strong>
           </p>
         )}
       </div>
@@ -81,13 +104,13 @@ export function CVAnalyzer() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Your CV / Resume</CardTitle>
-            <CardDescription>Paste your resume text here</CardDescription>
+            <CardTitle className="text-base">{t("analyzer.yourCv")}</CardTitle>
+            <CardDescription>{t("analyzer.yourCvDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               rows={12}
-              placeholder="Paste your CV content..."
+              placeholder={t("analyzer.cvPlaceholder")}
               value={cvText}
               onChange={(e) => setCvText(e.target.value)}
             />
@@ -95,13 +118,13 @@ export function CVAnalyzer() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Job Description</CardTitle>
-            <CardDescription>Paste the target job posting</CardDescription>
+            <CardTitle className="text-base">{t("analyzer.jobDesc")}</CardTitle>
+            <CardDescription>{t("analyzer.jobDescDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               rows={12}
-              placeholder="Paste the job description..."
+              placeholder={t("analyzer.jobPlaceholder")}
               value={jobText}
               onChange={(e) => setJobText(e.target.value)}
             />
@@ -109,10 +132,18 @@ export function CVAnalyzer() {
         </Card>
       </div>
 
-      <Button size="lg" onClick={handleAnalyze} disabled={analyzing}>
-        <Sparkles className="mr-2 size-4" />
-        {analyzing ? "Analyzing..." : "Analyze Match"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button size="lg" onClick={handleAnalyze} disabled={analyzing}>
+          <Sparkles className="mr-2 size-4" />
+          {analyzing ? t("analyzer.analyzing") : t("analyzer.analyze")}
+        </Button>
+        {result && linkedApp && (
+          <Button size="lg" variant="outline" onClick={handleSaveToApp}>
+            <Save className="mr-2 size-4" />
+            {t("analyzer.saveToApp")} ({linkedApp.company})
+          </Button>
+        )}
+      </div>
 
       {result && (
         <div className="space-y-4">
@@ -122,38 +153,36 @@ export function CVAnalyzer() {
                 <span className={`text-2xl font-bold ${scoreColor}`}>{result.matchScore}%</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold">Match Score</h3>
+                <h3 className="text-lg font-semibold">{t("analyzer.matchScore")}</h3>
                 <Progress value={result.matchScore} className="mt-2 h-2" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Based on skill overlap, keyword alignment, and requirement coverage
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">{t("analyzer.matchDesc")}</p>
               </div>
             </CardContent>
           </Card>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card>
-              <CardHeader><CardTitle className="text-sm">Matched Skills</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">{t("analyzer.matchedSkills")}</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap gap-1.5">
                 {result.matchedSkills.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">None detected</p>
+                  <p className="text-sm text-muted-foreground">{t("analyzer.noneDetected")}</p>
                 ) : result.matchedSkills.map((s) => (
                   <Badge key={s} variant="secondary" className="bg-emerald-500/10 text-emerald-400">{s}</Badge>
                 ))}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle className="text-sm">Missing Skills</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">{t("analyzer.missingSkills")}</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap gap-1.5">
                 {result.missingSkills.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Great coverage!</p>
+                  <p className="text-sm text-muted-foreground">{t("analyzer.greatCoverage")}</p>
                 ) : result.missingSkills.map((s) => (
                   <Badge key={s} variant="secondary" className="bg-red-500/10 text-red-400">{s}</Badge>
                 ))}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle className="text-sm">Recommended Keywords</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">{t("analyzer.recommended")}</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap gap-1.5">
                 {result.recommendedKeywords.map((k) => (
                   <Badge key={k} variant="outline">{k}</Badge>
@@ -164,7 +193,7 @@ export function CVAnalyzer() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <CardHeader><CardTitle className="text-sm">Weak Areas</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">{t("analyzer.weakAreas")}</CardTitle></CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   {result.weakAreas.map((w) => (
@@ -177,7 +206,7 @@ export function CVAnalyzer() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle className="text-sm">Improvement Suggestions</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm">{t("analyzer.suggestions")}</CardTitle></CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   {result.suggestions.map((s) => (
@@ -196,7 +225,7 @@ export function CVAnalyzer() {
       {history.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Analysis History</CardTitle>
+            <CardTitle className="text-base">{t("analyzer.history")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {history.slice(0, 5).map((h) => (

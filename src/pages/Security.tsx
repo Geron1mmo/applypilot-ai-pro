@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Lock, Shield, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { getPasswordStrength, hashPassword, verifyPassword } from "@/lib/crypto"
 import { changePasswordSchema } from "@/lib/validation"
 import { getSession, getSettings, saveSettings, saveUser } from "@/lib/storage"
@@ -20,7 +21,17 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
+const AUTO_LOGOUT_OPTIONS = [
+  { value: "0", labelKey: "security.disabled" },
+  { value: "15", labelKey: "security.min15" },
+  { value: "30", labelKey: "security.min30" },
+  { value: "60", labelKey: "security.hour1" },
+] as const
+
+const SECURITY_TIPS = ["security.tip1", "security.tip2", "security.tip3", "security.tip4"] as const
+
 export function Security() {
+  const { t } = useI18n()
   const { user, updateUser } = useAuth()
   const session = getSession()
   const [form, setForm] = useState({
@@ -54,7 +65,7 @@ export function Security() {
       user.passwordHash
     )
     if (!valid) {
-      toast.error("Current password is incorrect")
+      toast.error(t("security.wrongCurrent"))
       return
     }
 
@@ -63,7 +74,7 @@ export function Security() {
     saveUser(updated)
     updateUser(updated)
     setForm({ currentPassword: "", newPassword: "", confirmPassword: "" })
-    toast.success("Password updated")
+    toast.success(t("security.passwordUpdated"))
   }
 
   const handleAutoLogout = (minutes: number) => {
@@ -72,80 +83,78 @@ export function Security() {
       const settings = getSettings(user.id)
       saveSettings(user.id, { ...settings, autoLogoutMinutes: minutes })
     }
-    toast.success("Auto-logout setting updated")
+    toast.success(t("security.autoLogoutUpdated"))
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Security</h1>
-        <p className="text-sm text-muted-foreground">Manage your account security settings</p>
+        <h1 className="text-2xl font-bold">{t("security.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("security.subtitle")}</p>
       </div>
 
       <Alert>
         <Shield className="size-4" />
-        <AlertTitle>Local-first security</AlertTitle>
+        <AlertTitle>{t("security.localTitle")}</AlertTitle>
         <AlertDescription>
-          Passwords are hashed with Web Crypto API (SHA-256 + salt) and stored in your browser.
-          This is a portfolio demo — not production-grade authentication.
+          {t("security.localDesc")}
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Lock className="size-4" /> Change Password
+            <Lock className="size-4" /> {t("security.changePassword")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Current Password</Label>
+            <Label>{t("security.current")}</Label>
             <Input type="password" value={form.currentPassword} onChange={(e) => setForm({ ...form, currentPassword: e.target.value })} />
             {errors.currentPassword && <p className="text-xs text-destructive">{errors.currentPassword}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label>New Password</Label>
+            <Label>{t("security.new")}</Label>
             <Input type="password" value={form.newPassword} onChange={(e) => setForm({ ...form, newPassword: e.target.value })} />
             {form.newPassword && (
               <div className="space-y-1">
                 <Progress value={strength.score} className="h-1.5" />
-                <p className="text-xs text-muted-foreground">{strength.label}</p>
+                <p className="text-xs text-muted-foreground">{t("auth.strength")}: {strength.label}</p>
               </div>
             )}
             {errors.newPassword && <p className="text-xs text-destructive">{errors.newPassword}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label>Confirm New Password</Label>
+            <Label>{t("security.confirm")}</Label>
             <Input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} />
             {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
           </div>
-          <Button onClick={handleChangePassword}>Update Password</Button>
+          <Button onClick={handleChangePassword}>{t("security.updatePassword")}</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Session</CardTitle>
-          <CardDescription>Current session information</CardDescription>
+          <CardTitle className="text-base">{t("security.session")}</CardTitle>
+          <CardDescription>{t("security.sessionDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Session started</span>
+            <span className="text-muted-foreground">{t("security.sessionStarted")}</span>
             <span>{session ? new Date(session.createdAt).toLocaleString() : "—"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Last activity</span>
+            <span className="text-muted-foreground">{t("security.lastActivity")}</span>
             <span>{session ? new Date(session.lastActivity).toLocaleString() : "—"}</span>
           </div>
           <div className="flex items-center justify-between">
-            <Label>Auto logout after inactivity</Label>
+            <Label>{t("security.autoLogout")}</Label>
             <Select value={String(autoLogout)} onValueChange={(v) => handleAutoLogout(Number(v))}>
               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Disabled</SelectItem>
-                <SelectItem value="15">15 minutes</SelectItem>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">1 hour</SelectItem>
+                {AUTO_LOGOUT_OPTIONS.map(({ value, labelKey }) => (
+                  <SelectItem key={value} value={value}>{t(labelKey)}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -155,15 +164,15 @@ export function Security() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <ShieldCheck className="size-4" /> Two-Factor Authentication
+            <ShieldCheck className="size-4" /> {t("security.twoFa")}
           </CardTitle>
-          <CardDescription>Demo only — not functional</CardDescription>
+          <CardDescription>{t("security.twoFaDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Enable 2FA (Demo)</p>
-              <p className="text-xs text-muted-foreground">This toggle is for UI demonstration only</p>
+              <p className="text-sm font-medium">{t("security.enable2fa")}</p>
+              <p className="text-xs text-muted-foreground">{t("security.enable2faDesc")}</p>
             </div>
             <Switch checked={twoFA} onCheckedChange={setTwoFA} />
           </div>
@@ -171,13 +180,12 @@ export function Security() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Security Tips</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("security.tips")}</CardTitle></CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• Use a strong, unique password even for local accounts</li>
-            <li>• Export your data regularly as a backup</li>
-            <li>• Clear browser data will delete all ApplyPilot data</li>
-            <li>• Do not use this auth system for real sensitive data</li>
+            {SECURITY_TIPS.map((tipKey) => (
+              <li key={tipKey}>• {t(tipKey)}</li>
+            ))}
           </ul>
         </CardContent>
       </Card>

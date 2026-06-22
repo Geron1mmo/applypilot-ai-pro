@@ -3,6 +3,7 @@ import { Download, FileText, Pencil, Plus, Star, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Document } from "@/types"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { documentSchema } from "@/lib/validation"
 import { deleteDocument, getDocuments, saveDocument } from "@/lib/storage"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 
 export function Documents() {
+  const { t } = useI18n()
   const { user } = useAuth()
   const [docs, setDocs] = useState<Document[]>(() =>
     user ? getDocuments(user.id) : []
@@ -94,13 +96,13 @@ export function Documents() {
     saveDocument(doc)
     refresh()
     setDialogOpen(false)
-    toast.success(editing ? "Document updated" : "Document created")
+    toast.success(editing ? t("documents.updated") : t("documents.created"))
   }
 
   const handleDelete = (id: string) => {
     deleteDocument(id)
     refresh()
-    toast.success("Document deleted")
+    toast.success(t("documents.deleted"))
   }
 
   const handleExport = () => {
@@ -111,22 +113,25 @@ export function Documents() {
     a.download = "applypilot-documents.json"
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Documents exported")
+    toast.success(t("documents.exported"))
   }
+
+  const docTypeLabel = (type: Document["type"]) =>
+    type === "cv" ? t("documents.cv") : t("documents.coverLetter")
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Documents</h1>
-          <p className="text-sm text-muted-foreground">CV versions and cover letter drafts</p>
+          <h1 className="text-2xl font-bold">{t("documents.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("documents.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 size-4" /> Export JSON
+            <Download className="mr-2 size-4" /> {t("documents.exportJson")}
           </Button>
           <Button onClick={openNew}>
-            <Plus className="mr-2 size-4" /> Add Document
+            <Plus className="mr-2 size-4" /> {t("documents.add")}
           </Button>
         </div>
       </div>
@@ -135,8 +140,8 @@ export function Documents() {
         <Card>
           <CardContent className="py-16 text-center">
             <FileText className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-3 text-muted-foreground">No documents yet</p>
-            <Button className="mt-4" onClick={openNew}>Create your first document</Button>
+            <p className="mt-3 text-muted-foreground">{t("documents.empty")}</p>
+            <Button className="mt-4" onClick={openNew}>{t("documents.createFirst")}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -150,7 +155,7 @@ export function Documents() {
                       {doc.title}
                       {doc.isPrimary && <Star className="size-3.5 fill-amber-400 text-amber-400" />}
                     </CardTitle>
-                    <Badge variant="outline" className="mt-1 text-xs">{doc.type}</Badge>
+                    <Badge variant="outline" className="mt-1 text-xs">{docTypeLabel(doc.type)}</Badge>
                   </div>
                 </div>
               </CardHeader>
@@ -158,11 +163,11 @@ export function Documents() {
                 <p className="line-clamp-3 text-sm text-muted-foreground">{doc.content}</p>
                 {doc.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {doc.tags.map((t) => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
+                    {doc.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
                   </div>
                 )}
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => setPreview(doc)}>Preview</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setPreview(doc)}>{t("common.preview")}</Button>
                   <Button variant="ghost" size="icon-sm" onClick={() => openEdit(doc)}><Pencil className="size-3.5" /></Button>
                   <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => handleDelete(doc.id)}><Trash2 className="size-3.5" /></Button>
                 </div>
@@ -175,42 +180,42 @@ export function Documents() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Document" : "New Document"}</DialogTitle>
+            <DialogTitle>{editing ? t("documents.edit") : t("documents.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Type</Label>
+              <Label>{t("documents.type")}</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as "cv" | "cover-letter" })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cv">CV / Resume</SelectItem>
-                  <SelectItem value="cover-letter">Cover Letter</SelectItem>
+                  <SelectItem value="cv">{t("documents.cv")}</SelectItem>
+                  <SelectItem value="cover-letter">{t("documents.coverLetter")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Title</Label>
+              <Label>{t("documents.docTitle")}</Label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Content</Label>
+              <Label>{t("documents.content")}</Label>
               <Textarea rows={8} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
               {errors.content && <p className="text-xs text-destructive">{errors.content}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Tags (comma-separated)</Label>
+              <Label>{t("documents.tags")}</Label>
               <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
             </div>
             {form.type === "cv" && (
               <div className="flex items-center gap-2">
                 <Checkbox checked={form.isPrimary} onCheckedChange={(c) => setForm({ ...form, isPrimary: c === true })} id="primary" />
-                <Label htmlFor="primary">Mark as primary CV</Label>
+                <Label htmlFor="primary">{t("documents.primaryCv")}</Label>
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave}>Save</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
+              <Button onClick={handleSave}>{t("common.save")}</Button>
             </div>
           </div>
         </DialogContent>

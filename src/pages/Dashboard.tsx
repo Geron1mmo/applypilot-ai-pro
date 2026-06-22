@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Plus,
   ScanSearch,
+  Target,
   TrendingUp,
   XCircle,
 } from "lucide-react"
@@ -17,15 +18,23 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { useApplications } from "@/hooks/useApplications"
+import { getSettings } from "@/lib/storage"
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel"
 import { StatusBadge } from "@/components/applications/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 
 export function Dashboard() {
   const { applications } = useApplications()
+  const { user } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
+
+  const weeklyGoal = user ? getSettings(user.id).weeklyApplicationGoal : 5
 
   const stats = useMemo(() => {
     const applied = applications.filter((a) => a.status !== "saved").length
@@ -41,17 +50,22 @@ export function Dashboard() {
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0
 
-    const statusCounts = [
-      { name: "Saved", count: applications.filter((a) => a.status === "saved").length },
-      { name: "Applied", count: applications.filter((a) => a.status === "applied").length },
-      { name: "Interview", count: applications.filter((a) => a.status === "interview").length },
-      { name: "Technical", count: applications.filter((a) => a.status === "technical").length },
-      { name: "Offer", count: applications.filter((a) => a.status === "offer").length },
-      { name: "Rejected", count: applications.filter((a) => a.status === "rejected").length },
-    ]
+    const statusKeys = ["saved", "applied", "interview", "technical", "offer", "rejected"] as const
+    const statusCounts = statusKeys.map((key) => ({
+      name: t(`status.${key}`),
+      count: applications.filter((a) => a.status === key).length,
+    }))
 
-    return { applied, interviews, offers, rejected, avgScore, statusCounts }
-  }, [applications])
+    const weekStart = new Date()
+    weekStart.setHours(0, 0, 0, 0)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+    const weeklyApplied = applications.filter((a) => {
+      if (!a.dateApplied) return false
+      return new Date(a.dateApplied) >= weekStart
+    }).length
+
+    return { applied, interviews, offers, rejected, avgScore, statusCounts, weeklyApplied }
+  }, [applications, t])
 
   const recent = applications.slice(0, 5)
   const upcoming = applications
@@ -59,30 +73,50 @@ export function Dashboard() {
     .slice(0, 3)
 
   const statCards = [
-    { label: "Total", value: applications.length, icon: Briefcase, color: "text-primary" },
-    { label: "Applied", value: stats.applied, icon: TrendingUp, color: "text-blue-400" },
-    { label: "Interviews", value: stats.interviews, icon: Calendar, color: "text-violet-400" },
-    { label: "Offers", value: stats.offers, icon: CheckCircle2, color: "text-emerald-400" },
-    { label: "Rejected", value: stats.rejected, icon: XCircle, color: "text-red-400" },
-    { label: "Avg CV Match", value: `${stats.avgScore}%`, icon: ScanSearch, color: "text-amber-400" },
+    { label: t("dashboard.total"), value: applications.length, icon: Briefcase, color: "text-primary" },
+    { label: t("dashboard.applied"), value: stats.applied, icon: TrendingUp, color: "text-blue-400" },
+    { label: t("dashboard.interviews"), value: stats.interviews, icon: Calendar, color: "text-violet-400" },
+    { label: t("dashboard.offers"), value: stats.offers, icon: CheckCircle2, color: "text-emerald-400" },
+    { label: t("dashboard.rejected"), value: stats.rejected, icon: XCircle, color: "text-red-400" },
+    { label: t("dashboard.avgMatch"), value: `${stats.avgScore}%`, icon: ScanSearch, color: "text-amber-400" },
   ]
+
+  const goalProgress = weeklyGoal > 0 ? Math.min(100, (stats.weeklyApplied / weeklyGoal) * 100) : 0
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Overview of your job search</p>
+          <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate("/app/cv-analyzer")}>
-            <ScanSearch className="mr-2 size-4" /> Analyze CV
+            <ScanSearch className="mr-2 size-4" /> {t("dashboard.analyzeCv")}
           </Button>
           <Button onClick={() => navigate("/app/applications?action=new")}>
-            <Plus className="mr-2 size-4" /> New Application
+            <Plus className="mr-2 size-4" /> {t("nav.newApplication")}
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="rounded-lg bg-primary/10 p-2 text-primary">
+            <Target className="size-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium">{t("dashboard.weeklyGoal")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.weeklyGoalDesc", { current: stats.weeklyApplied, goal: weeklyGoal })}
+            </p>
+            <Progress value={goalProgress} className="mt-2 h-2" />
+            {stats.weeklyApplied >= weeklyGoal && weeklyGoal > 0 && (
+              <p className="mt-1 text-xs text-emerald-400">{t("dashboard.goalReached")}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map(({ label, value, icon: Icon, color }) => (
@@ -105,12 +139,12 @@ export function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Applications by Status</CardTitle>
-            <CardDescription>Pipeline distribution</CardDescription>
+            <CardTitle>{t("dashboard.byStatus")}</CardTitle>
+            <CardDescription>{t("dashboard.byStatusDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {applications.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No applications yet</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("common.noData")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={stats.statusCounts}>
@@ -126,12 +160,12 @@ export function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Interviews</CardTitle>
-            <CardDescription>Active interview stages</CardDescription>
+            <CardTitle>{t("dashboard.upcomingInterviews")}</CardTitle>
+            <CardDescription>{t("dashboard.upcomingDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {upcoming.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No upcoming interviews</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("dashboard.noInterviews")}</p>
             ) : (
               upcoming.map((app) => (
                 <div key={app.id} className="flex items-center justify-between rounded-lg border border-border p-3">
@@ -149,16 +183,16 @@ export function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest application updates</CardDescription>
+          <CardTitle>{t("dashboard.recentActivity")}</CardTitle>
+          <CardDescription>{t("dashboard.recentDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           {recent.length === 0 ? (
             <div className="py-12 text-center">
               <Briefcase className="mx-auto size-10 text-muted-foreground/50" />
-              <p className="mt-3 text-sm text-muted-foreground">No activity yet. Add your first application!</p>
+              <p className="mt-3 text-sm text-muted-foreground">{t("dashboard.noActivity")}</p>
               <Button className="mt-4" onClick={() => navigate("/app/applications?action=new")}>
-                Add Application
+                {t("dashboard.addFirst")}
               </Button>
             </div>
           ) : (
@@ -168,7 +202,7 @@ export function Dashboard() {
                   <div>
                     <p className="font-medium">{app.company} — {app.role}</p>
                     <p className="text-xs text-muted-foreground">
-                      Updated {new Date(app.updatedAt).toLocaleDateString()}
+                      {new Date(app.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
                   <StatusBadge status={app.status} />

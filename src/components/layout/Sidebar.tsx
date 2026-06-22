@@ -15,25 +15,27 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-const navItems = [
-  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/app/applications", label: "Applications", icon: Briefcase },
-  { to: "/app/kanban", label: "Kanban", icon: Kanban },
-  { to: "/app/cv-analyzer", label: "CV Analyzer", icon: ScanSearch },
-  { to: "/app/documents", label: "Documents", icon: FileText },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/app/profile", label: "Profile", icon: User },
-  { to: "/app/settings", label: "Settings", icon: Settings },
-  { to: "/app/security", label: "Security", icon: Shield },
-  { to: "/app/billing", label: "Billing", icon: CreditCard },
-  { to: "/app/help", label: "Help", icon: HelpCircle },
-]
-
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth()
+  const { t } = useI18n()
+
+  const navItems = [
+    { to: "/app/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { to: "/app/applications", label: t("nav.applications"), icon: Briefcase },
+    { to: "/app/kanban", label: t("nav.kanban"), icon: Kanban },
+    { to: "/app/cv-analyzer", label: t("nav.cvAnalyzer"), icon: ScanSearch },
+    { to: "/app/documents", label: t("nav.documents"), icon: FileText },
+    { to: "/app/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    { to: "/app/profile", label: t("nav.profile"), icon: User },
+    { to: "/app/settings", label: t("nav.settings"), icon: Settings },
+    { to: "/app/security", label: t("nav.security"), icon: Shield },
+    { to: "/app/billing", label: t("nav.billing"), icon: CreditCard },
+    { to: "/app/help", label: t("nav.help"), icon: HelpCircle },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -85,7 +87,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           }}
         >
           <LogOut className="size-4" />
-          Logout
+          {t("nav.logout")}
         </Button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { AlarmClock, Calendar, MessageSquare } from "lucide-react"
 import type { Application } from "@/types"
 import { getUpcomingReminders } from "@/lib/applications"
 import { formatRelativeDate } from "@/lib/dates"
+import { useI18n } from "@/contexts/I18nContext"
 import { StatusBadge } from "@/components/applications/StatusBadge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -42,6 +43,7 @@ function ReminderList({
 
 export function RemindersPanel({ applications }: { applications: Application[] }) {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const reminders = useMemo(() => getUpcomingReminders(applications), [applications])
   const total =
     reminders.deadlines.length +
@@ -53,32 +55,32 @@ export function RemindersPanel({ applications }: { applications: Application[] }
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <AlarmClock className="size-4 text-primary" />
-          Upcoming Reminders
+          {t("reminders.title")}
         </CardTitle>
         <CardDescription>
           {total > 0
-            ? `${total} item${total === 1 ? "" : "s"} in the next 14 days`
-            : "No upcoming deadlines or follow-ups"}
+            ? t("reminders.items", { n: total })
+            : t("reminders.none")}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Calendar className="size-3.5" /> Deadlines
+            <Calendar className="size-3.5" /> {t("reminders.deadlines")}
           </p>
-          <ReminderList items={reminders.deadlines} dateKey="deadline" empty="None" />
+          <ReminderList items={reminders.deadlines} dateKey="deadline" empty={t("common.none")} />
         </div>
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <MessageSquare className="size-3.5" /> Follow-ups
+            <MessageSquare className="size-3.5" /> {t("reminders.followUps")}
           </p>
-          <ReminderList items={reminders.followUps} dateKey="followUpDate" empty="None" />
+          <ReminderList items={reminders.followUps} dateKey="followUpDate" empty={t("common.none")} />
         </div>
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Calendar className="size-3.5" /> Interviews
+            <Calendar className="size-3.5" /> {t("reminders.interviews")}
           </p>
-          <ReminderList items={reminders.interviews} dateKey="interviewDate" empty="None" />
+          <ReminderList items={reminders.interviews} dateKey="interviewDate" empty={t("common.none")} />
         </div>
       </CardContent>
       {total > 0 && (
@@ -88,7 +90,7 @@ export function RemindersPanel({ applications }: { applications: Application[] }
             className="text-xs text-primary hover:underline"
             onClick={() => navigate("/app/applications")}
           >
-            View all applications →
+            {t("common.viewAll")}
           </button>
         </div>
       )}

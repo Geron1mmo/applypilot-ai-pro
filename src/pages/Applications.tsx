@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { Copy, Download, Pencil, Plus, ScanSearch, Search, Trash2 } from "lucide-react"
+import { Copy, Download, ExternalLink, Pencil, Plus, ScanSearch, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Application, ApplicationPriority, ApplicationStatus } from "@/types"
 import { duplicateApplication, exportApplicationsCsv } from "@/lib/applications"
 import { useApplications } from "@/hooks/useApplications"
+import { useI18n } from "@/contexts/I18nContext"
 import { ApplicationFormDialog } from "@/components/applications/ApplicationFormDialog"
 import { PriorityBadge } from "@/components/applications/PriorityBadge"
 import { StatusBadge } from "@/components/applications/StatusBadge"
@@ -29,6 +30,7 @@ import {
 
 export function Applications() {
   const { applications, upsert, remove } = useApplications()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
@@ -73,12 +75,12 @@ export function Applications() {
 
   const handleDelete = (id: string) => {
     remove(id)
-    toast.success("Application deleted")
+    toast.success(t("applications.deleted"))
   }
 
   const handleDuplicate = (app: Application) => {
     upsert(duplicateApplication(app))
-    toast.success("Application duplicated")
+    toast.success(t("applications.duplicated"))
   }
 
   const handleExportCsv = () => {
@@ -90,11 +92,12 @@ export function Applications() {
     a.download = `applypilot-applications-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("CSV exported")
+    toast.success(t("applications.csvExported"))
   }
 
   const handleAnalyze = (app: Application) => {
     const params = new URLSearchParams()
+    params.set("appId", app.id)
     if (app.company) params.set("company", app.company)
     if (app.jobDescription) params.set("job", app.jobDescription.slice(0, 2000))
     navigate(`/app/cv-analyzer?${params.toString()}`)
@@ -111,15 +114,17 @@ export function Applications() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Applications</h1>
-          <p className="text-sm text-muted-foreground">{applications.length} total applications</p>
+          <h1 className="text-2xl font-bold">{t("applications.title")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("applications.total", { n: applications.length })}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCsv} disabled={filtered.length === 0}>
-            <Download className="mr-2 size-4" /> Export CSV
+            <Download className="mr-2 size-4" /> {t("applications.exportCsv")}
           </Button>
           <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
-            <Plus className="mr-2 size-4" /> Add Application
+            <Plus className="mr-2 size-4" /> {t("applications.add")}
           </Button>
         </div>
       </div>
@@ -129,31 +134,31 @@ export function Applications() {
           <div className="flex flex-wrap gap-3">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder={t("common.search")} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-36"><SelectValue placeholder={t("applications.status")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">{t("applications.allStatus")}</SelectItem>
                 {(["saved","applied","interview","technical","offer","rejected"] as ApplicationStatus[]).map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                  <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectTrigger className="w-36"><SelectValue placeholder={t("applications.priority")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="all">{t("applications.allPriority")}</SelectItem>
                 {(["low","medium","high"] as ApplicationPriority[]).map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                  <SelectItem key={p} value={p}>{t(`priority.${p}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "company")}>
               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="date">Sort by Date</SelectItem>
-                <SelectItem value="company">Sort by Company</SelectItem>
+                <SelectItem value="date">{t("applications.sortDate")}</SelectItem>
+                <SelectItem value="company">{t("applications.sortCompany")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -161,9 +166,9 @@ export function Applications() {
         <CardContent>
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-muted-foreground">No applications found</p>
+              <p className="text-muted-foreground">{t("applications.empty")}</p>
               <Button className="mt-4" onClick={() => { setEditing(null); setDialogOpen(true) }}>
-                Add your first application
+                {t("applications.addFirst")}
               </Button>
             </div>
           ) : (
@@ -171,14 +176,14 @@ export function Applications() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Salary</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>CV Match</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("applications.company")}</TableHead>
+                    <TableHead>{t("applications.role")}</TableHead>
+                    <TableHead>{t("applications.status")}</TableHead>
+                    <TableHead>{t("applications.priority")}</TableHead>
+                    <TableHead>{t("applications.salary")}</TableHead>
+                    <TableHead>{t("applications.location")}</TableHead>
+                    <TableHead>{t("applications.cvMatch")}</TableHead>
+                    <TableHead className="text-right">{t("applications.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -193,18 +198,28 @@ export function Applications() {
                       <TableCell>{app.cvMatchScore !== null ? `${app.cvMatchScore}%` : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {app.jobUrl && (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title={t("common.openUrl")}
+                              onClick={() => window.open(app.jobUrl, "_blank", "noopener,noreferrer")}
+                            >
+                              <ExternalLink className="size-3.5" />
+                            </Button>
+                          )}
                           {app.jobDescription && (
-                            <Button variant="ghost" size="icon-sm" title="Analyze CV" onClick={() => handleAnalyze(app)}>
+                            <Button variant="ghost" size="icon-sm" title={t("common.analyzeCv")} onClick={() => handleAnalyze(app)}>
                               <ScanSearch className="size-3.5" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon-sm" title="Duplicate" onClick={() => handleDuplicate(app)}>
+                          <Button variant="ghost" size="icon-sm" title={t("common.duplicate")} onClick={() => handleDuplicate(app)}>
                             <Copy className="size-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon-sm" title="Edit" onClick={() => { setEditing(app); setDialogOpen(true) }}>
+                          <Button variant="ghost" size="icon-sm" title={t("common.edit")} onClick={() => { setEditing(app); setDialogOpen(true) }}>
                             <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon-sm" className="text-destructive" title="Delete" onClick={() => handleDelete(app.id)}>
+                          <Button variant="ghost" size="icon-sm" className="text-destructive" title={t("common.delete")} onClick={() => handleDelete(app.id)}>
                             <Trash2 className="size-3.5" />
                           </Button>
                         </div>
@@ -224,7 +239,7 @@ export function Applications() {
         application={editing}
         onSave={(app) => {
           upsert(app)
-          toast.success(editing ? "Application updated" : "Application added")
+          toast.success(editing ? t("applications.updated") : t("applications.added"))
         }}
       />
     </div>

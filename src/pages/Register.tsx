@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Briefcase, Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { getPasswordStrength } from "@/lib/crypto"
 import { registerSchema } from "@/lib/validation"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 
 export function Register() {
+  const { t } = useI18n()
   const { register } = useAuth()
   const navigate = useNavigate()
 
@@ -55,29 +57,29 @@ export function Register() {
           <div className="flex size-12 items-center justify-center rounded-xl bg-primary">
             <Briefcase className="size-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-sm text-muted-foreground">Start tracking your job search today</p>
+          <h1 className="text-2xl font-bold">{t("auth.createAccount")}</h1>
+          <p className="text-sm text-muted-foreground">{t("auth.registerSubtitle")}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Register</CardTitle>
-            <CardDescription>All data is stored locally in your browser</CardDescription>
+            <CardTitle>{t("auth.register")}</CardTitle>
+            <CardDescription>{t("auth.registerDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Full Name</Label>
+                <Label>{t("auth.fullName")}</Label>
                 <Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
                 {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Email</Label>
+                <Label>{t("auth.email")}</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Password</Label>
+                <Label>{t("auth.password")}</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -91,13 +93,13 @@ export function Register() {
                 {form.password && (
                   <div className="space-y-1">
                     <Progress value={strength.score} className="h-1.5" />
-                    <p className="text-xs text-muted-foreground">Strength: {strength.label}</p>
+                    <p className="text-xs text-muted-foreground">{t("auth.strength")}: {strength.label}</p>
                   </div>
                 )}
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label>Confirm Password</Label>
+                <Label>{t("auth.confirmPassword")}</Label>
                 <Input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} />
                 {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
               </div>
@@ -108,17 +110,17 @@ export function Register() {
                   onCheckedChange={(c) => setForm({ ...form, acceptTerms: c === true })}
                 />
                 <Label htmlFor="terms" className="text-sm font-normal leading-snug text-muted-foreground">
-                  I agree to the Terms of Service and Privacy Policy (demo mock)
+                  {t("auth.acceptTerms")}
                 </Label>
               </div>
               {errors.acceptTerms && <p className="text-xs text-destructive">{errors.acceptTerms}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating account..." : "Create Account"}
+                {loading ? t("common.loading") : t("auth.createAccountBtn")}
               </Button>
             </form>
             <p className="mt-4 text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+              {t("auth.hasAccount")}{" "}
+              <Link to="/login" className="text-primary hover:underline">{t("auth.signIn")}</Link>
             </p>
           </CardContent>
         </Card>

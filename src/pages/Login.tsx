@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { Briefcase, Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useI18n } from "@/contexts/I18nContext"
 import { loginSchema } from "@/lib/validation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export function Login() {
+  const { t } = useI18n()
   const { login, loginDemo } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -51,19 +53,19 @@ export function Login() {
           <div className="flex size-12 items-center justify-center rounded-xl bg-primary">
             <Briefcase className="size-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">Sign in to ApplyPilot AI Pro</p>
+          <h1 className="text-2xl font-bold">{t("auth.welcomeBack")}</h1>
+          <p className="text-sm text-muted-foreground">{t("auth.signInSubtitle")}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign in</CardTitle>
-            <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+            <CardTitle>{t("auth.signIn")}</CardTitle>
+            <CardDescription>{t("auth.signInDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -74,7 +76,7 @@ export function Login() {
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -95,7 +97,7 @@ export function Login() {
                 {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? t("common.loading") : t("auth.signIn")}
               </Button>
             </form>
 
@@ -109,12 +111,12 @@ export function Login() {
             </div>
 
             <Button variant="outline" className="w-full" onClick={handleDemo} disabled={loading}>
-              Try Demo Account
+              {t("auth.tryDemo")}
             </Button>
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">Register</Link>
+              {t("auth.noAccount")}{" "}
+              <Link to="/register" className="text-primary hover:underline">{t("auth.register")}</Link>
             </p>
           </CardContent>
         </Card>
