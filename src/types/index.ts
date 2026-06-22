@@ -16,6 +16,8 @@ export type DocumentType = "cv" | "cover-letter"
 
 export type ThemeMode = "dark" | "light" | "system"
 
+export type Locale = "en" | "uk" | "cs"
+
 export interface UserProfile {
   jobTargetTitle: string
   location: string
@@ -103,10 +105,12 @@ export interface Document {
 
 export interface AppSettings {
   theme: ThemeMode
+  language: Locale
   autoLogoutMinutes: number
   emailNotifications: boolean
   interviewReminders: boolean
   weeklyDigest: boolean
+  weeklyApplicationGoal: number
 }
 
 export interface AppData {

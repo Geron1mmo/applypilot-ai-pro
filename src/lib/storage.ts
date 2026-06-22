@@ -15,10 +15,12 @@ const DATA_VERSION = "1.0.0"
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
+  language: "uk",
   autoLogoutMinutes: 30,
   emailNotifications: true,
   interviewReminders: true,
   weeklyDigest: false,
+  weeklyApplicationGoal: 5,
 }
 
 function emptyData(): AppData {
@@ -150,7 +152,10 @@ export function deleteDocument(id: string): void {
 
 export function getSettings(userId: string): AppSettings {
   const data = loadData()
-  return data.settings[userId] ?? { ...DEFAULT_SETTINGS }
+  const raw = data.settings[userId]
+  return raw
+    ? { ...DEFAULT_SETTINGS, ...raw, language: raw.language ?? DEFAULT_SETTINGS.language, weeklyApplicationGoal: raw.weeklyApplicationGoal ?? DEFAULT_SETTINGS.weeklyApplicationGoal }
+    : { ...DEFAULT_SETTINGS }
 }
 
 export function saveSettings(userId: string, settings: AppSettings): void {
