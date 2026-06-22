@@ -6,6 +6,29 @@ export const DEMO_PASSWORD = "Demo12345!"
 
 export const DEMO_USER_ID = "demo-user-001"
 
+export const OWNER_EMAIL = "oleg@applypilot.local"
+export const OWNER_PASSWORD = "OlegApply2026!"
+export const OWNER_USER_ID = "owner-user-001"
+
+export function createOwnerUser(passwordHash: string, salt: string): User {
+  return {
+    id: OWNER_USER_ID,
+    fullName: "Oleg Kost",
+    email: OWNER_EMAIL,
+    passwordHash,
+    salt,
+    role: "user",
+    createdAt: new Date().toISOString(),
+    profile: {
+      jobTargetTitle: "Full-Stack / AI Developer",
+      location: "Remote, EU",
+      preferredWorkMode: "remote",
+      bio: "Developer building portfolio projects with React, TypeScript, and AI tooling.",
+      skills: ["React", "TypeScript", "Node.js", "AI", "Tailwind"],
+    },
+  }
+}
+
 export function createDemoUser(passwordHash: string, salt: string): User {
   return {
     id: DEMO_USER_ID,

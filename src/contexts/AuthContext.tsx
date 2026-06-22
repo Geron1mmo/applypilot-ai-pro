@@ -10,13 +10,18 @@ import {
 import { toast } from "sonner"
 import type { User } from "@/types"
 import { generateSalt, generateToken, hashPassword, verifyPassword } from "@/lib/crypto"
+import { getT } from "@/i18n/getT"
 import {
   createDemoApplications,
   createDemoDocuments,
   createDemoUser,
+  createOwnerUser,
   DEMO_EMAIL,
   DEMO_PASSWORD,
   DEMO_USER_ID,
+  OWNER_EMAIL,
+  OWNER_PASSWORD,
+  OWNER_USER_ID,
 } from "@/lib/demoData"
 import {
   clearAllData,
@@ -59,6 +64,20 @@ async function ensureDemoAccount(): Promise<void> {
   saveData(data)
 }
 
+async function ensureOwnerAccount(): Promise<void> {
+  const data = loadData()
+  const existing = data.users.find((u) => u.email === OWNER_EMAIL)
+  if (existing) return
+
+  const salt = generateSalt()
+  const passwordHash = await hashPassword(OWNER_PASSWORD, salt)
+  const ownerUser = createOwnerUser(passwordHash, salt)
+
+  data.users.push(ownerUser)
+  data.settings[OWNER_USER_ID] = { ...getSettings(OWNER_USER_ID), language: "uk" }
+  saveData(data)
+}
+
 function createSession(userId: string) {
   const session = {
     token: generateToken(),
@@ -95,14 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       () => {
         setSession(null)
         setUser(null)
-        toast.info("Session expired due to inactivity")
+        toast.info(getT()("auth.sessionExpired"))
       },
       minutes * 60 * 1000
     )
   }, [user])
 
   useEffect(() => {
-    ensureDemoAccount().then(() => {
+    Promise.all([ensureDemoAccount(), ensureOwnerAccount()]).then(() => {
       const session = getSession()
       if (session) {
         const found = getUserById(session.userId)
@@ -138,26 +157,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, resetInactivityTimer])
 
   const login = useCallback(async (email: string, password: string) => {
+    const t = getT()
     const found = getUserByEmail(email)
     if (!found) {
-      toast.error("No account found with this email")
+      toast.error(t("auth.noUser"))
       return false
     }
     const valid = await verifyPassword(password, found.salt, found.passwordHash)
     if (!valid) {
-      toast.error("Incorrect password")
+      toast.error(t("auth.wrongPassword"))
       return false
     }
     createSession(found.id)
     setUser(found)
-    toast.success(`Welcome back, ${found.fullName.split(" ")[0]}!`)
+    toast.success(t("auth.welcomeUser", { name: found.fullName.split(" ")[0] }))
     return true
   }, [])
 
   const register = useCallback(
     async (fullName: string, email: string, password: string) => {
+      const t = getT()
       if (getUserByEmail(email)) {
-        toast.error("An account with this email already exists")
+        toast.error(t("auth.exists"))
         return false
       }
       const salt = generateSalt()
@@ -181,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       saveUser(newUser)
       createSession(newUser.id)
       setUser(newUser)
-      toast.success("Account created successfully!")
+      toast.success(t("auth.accountCreated"))
       return true
     },
     []
@@ -191,19 +212,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await ensureDemoAccount()
     const demo = getUserByEmail(DEMO_EMAIL)
     if (!demo) {
-      toast.error("Demo account unavailable")
+      toast.error(getT()("auth.noUser"))
       return false
     }
     createSession(demo.id)
     setUser(demo)
-    toast.success("Logged in with demo account")
+    toast.success(getT()("auth.demoLogin"))
     return true
   }, [])
 
   const logout = useCallback(() => {
     setSession(null)
     setUser(null)
-    toast.success("Logged out")
+    toast.success(getT()("auth.loggedOut"))
   }, [])
 
   const updateUser = useCallback((updates: Partial<User>) => {
