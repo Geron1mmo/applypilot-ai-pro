@@ -1,5 +1,6 @@
 import { toast } from "sonner"
 import type { ApplicationStatus } from "@/types"
+import { buildApplicationUpdate } from "@/lib/applications"
 import { useApplications } from "@/hooks/useApplications"
 import { PriorityBadge } from "@/components/applications/PriorityBadge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,7 +28,7 @@ export function Kanban() {
   const moveCard = (appId: string, newStatus: ApplicationStatus) => {
     const app = applications.find((a) => a.id === appId)
     if (!app || app.status === newStatus) return
-    upsert({ ...app, status: newStatus, updatedAt: new Date().toISOString() })
+    upsert(buildApplicationUpdate(app, { ...app, status: newStatus, updatedAt: new Date().toISOString() }))
     toast.success(`Moved to ${newStatus}`)
   }
 

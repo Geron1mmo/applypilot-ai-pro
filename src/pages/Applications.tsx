@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "react-router-dom"
-import { Pencil, Plus, Search, Trash2 } from "lucide-react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { Copy, Download, Pencil, Plus, ScanSearch, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Application, ApplicationPriority, ApplicationStatus } from "@/types"
+import { duplicateApplication, exportApplicationsCsv } from "@/lib/applications"
 import { useApplications } from "@/hooks/useApplications"
 import { ApplicationFormDialog } from "@/components/applications/ApplicationFormDialog"
 import { PriorityBadge } from "@/components/applications/PriorityBadge"
@@ -28,6 +29,7 @@ import {
 
 export function Applications() {
   const { applications, upsert, remove } = useApplications()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -74,6 +76,30 @@ export function Applications() {
     toast.success("Application deleted")
   }
 
+  const handleDuplicate = (app: Application) => {
+    upsert(duplicateApplication(app))
+    toast.success("Application duplicated")
+  }
+
+  const handleExportCsv = () => {
+    const csv = exportApplicationsCsv(filtered)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `applypilot-applications-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("CSV exported")
+  }
+
+  const handleAnalyze = (app: Application) => {
+    const params = new URLSearchParams()
+    if (app.company) params.set("company", app.company)
+    if (app.jobDescription) params.set("job", app.jobDescription.slice(0, 2000))
+    navigate(`/app/cv-analyzer?${params.toString()}`)
+  }
+
   const formatSalary = (app: Application) => {
     if (!app.salaryMin && !app.salaryMax) return "—"
     const min = app.salaryMin ? `$${(app.salaryMin / 1000).toFixed(0)}k` : ""
@@ -88,9 +114,14 @@ export function Applications() {
           <h1 className="text-2xl font-bold">Applications</h1>
           <p className="text-sm text-muted-foreground">{applications.length} total applications</p>
         </div>
-        <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
-          <Plus className="mr-2 size-4" /> Add Application
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCsv} disabled={filtered.length === 0}>
+            <Download className="mr-2 size-4" /> Export CSV
+          </Button>
+          <Button onClick={() => { setEditing(null); setDialogOpen(true) }}>
+            <Plus className="mr-2 size-4" /> Add Application
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -162,10 +193,18 @@ export function Applications() {
                       <TableCell>{app.cvMatchScore !== null ? `${app.cvMatchScore}%` : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon-sm" onClick={() => { setEditing(app); setDialogOpen(true) }}>
+                          {app.jobDescription && (
+                            <Button variant="ghost" size="icon-sm" title="Analyze CV" onClick={() => handleAnalyze(app)}>
+                              <ScanSearch className="size-3.5" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon-sm" title="Duplicate" onClick={() => handleDuplicate(app)}>
+                            <Copy className="size-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" title="Edit" onClick={() => { setEditing(app); setDialogOpen(true) }}>
                             <Pencil className="size-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => handleDelete(app.id)}>
+                          <Button variant="ghost" size="icon-sm" className="text-destructive" title="Delete" onClick={() => handleDelete(app.id)}>
                             <Trash2 className="size-3.5" />
                           </Button>
                         </div>

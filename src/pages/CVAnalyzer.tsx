@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { ScanSearch, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import type { CVAnalysis } from "@/types"
@@ -14,8 +15,17 @@ import { Textarea } from "@/components/ui/textarea"
 
 export function CVAnalyzer() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const [cvText, setCvText] = useState("")
   const [jobText, setJobText] = useState("")
+  const [prefillCompany, setPrefillCompany] = useState<string | null>(null)
+
+  useEffect(() => {
+    const job = searchParams.get("job")
+    const company = searchParams.get("company")
+    if (job) setJobText(job)
+    if (company) setPrefillCompany(company)
+  }, [searchParams])
   const [result, setResult] = useState<ReturnType<typeof analyzeCV> | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [history, setHistory] = useState<CVAnalysis[]>(() =>
@@ -61,6 +71,11 @@ export function CVAnalyzer() {
         <p className="text-sm text-muted-foreground">
           Local skill-matching engine — no external AI APIs
         </p>
+        {prefillCompany && (
+          <p className="mt-1 text-sm text-primary">
+            Analyzing fit for <strong>{prefillCompany}</strong>
+          </p>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
