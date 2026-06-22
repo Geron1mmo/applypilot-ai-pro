@@ -1,5 +1,9 @@
 # ApplyPilot AI Pro
 
+[![CI](https://github.com/Geron1mmo/applypilot-ai-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/Geron1mmo/applypilot-ai-pro/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/demo-live-blue)](https://geron1mmo.github.io/applypilot-ai-pro/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+
 A local-first, portfolio-ready SaaS-style job application tracker for developers and job seekers. Track applications, analyze CV fit, manage documents, and visualize your job search — all running in the browser with zero backend dependencies.
 
 **Live Demo:** [https://geron1mmo.github.io/applypilot-ai-pro/](https://geron1mmo.github.io/applypilot-ai-pro/)
@@ -24,6 +28,10 @@ A local-first, portfolio-ready SaaS-style job application tracker for developers
 - **Local Authentication** — Register/login with Web Crypto password hashing
 - **Demo Mode** — Pre-loaded demo account with sample data
 - **Export/Import** — Full JSON backup and restore
+- **CSV Export** — Download applications for spreadsheets or recruiters
+- **Follow-up Reminders** — Interview dates, follow-ups, and deadline alerts
+- **Status History** — Track how each application moved through the pipeline
+- **CV Analyzer Links** — Jump from any application to pre-filled CV analysis
 - **Dark/Light Theme** — Professional SaaS dashboard UI
 - **Responsive Design** — Mobile-friendly with collapsible sidebar
 
@@ -48,7 +56,7 @@ I wanted a portfolio project that demonstrates full-stack product thinking witho
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/applypilot-ai-pro.git
+git clone https://github.com/Geron1mmo/applypilot-ai-pro.git
 cd applypilot-ai-pro
 npm install
 npm run dev
