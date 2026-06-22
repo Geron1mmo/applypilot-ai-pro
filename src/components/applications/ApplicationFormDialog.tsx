@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { Application, ApplicationStatus, ApplicationPriority, WorkMode } from "@/types"
+import { buildApplicationUpdate } from "@/lib/applications"
 import { applicationSchema } from "@/lib/validation"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,8 @@ export function ApplicationFormDialog({
     priority: "medium" as ApplicationPriority,
     deadline: "",
     dateApplied: "",
+    interviewDate: "",
+    followUpDate: "",
     notes: "",
     jobDescription: "",
   })
@@ -71,6 +74,8 @@ export function ApplicationFormDialog({
         priority: application.priority,
         deadline: application.deadline?.split("T")[0] ?? "",
         dateApplied: application.dateApplied?.split("T")[0] ?? "",
+        interviewDate: application.interviewDate?.split("T")[0] ?? "",
+        followUpDate: application.followUpDate?.split("T")[0] ?? "",
         notes: application.notes,
         jobDescription: application.jobDescription,
       })
@@ -90,6 +95,8 @@ export function ApplicationFormDialog({
         priority: "medium",
         deadline: "",
         dateApplied: "",
+        interviewDate: "",
+        followUpDate: "",
         notes: "",
         jobDescription: "",
       })
@@ -105,6 +112,8 @@ export function ApplicationFormDialog({
       salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
       deadline: form.deadline || null,
       dateApplied: form.dateApplied || null,
+      interviewDate: form.interviewDate || null,
+      followUpDate: form.followUpDate || null,
     })
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {}
@@ -117,8 +126,7 @@ export function ApplicationFormDialog({
     }
     if (!user) return
 
-    const now = new Date().toISOString()
-    const app: Application = {
+    const draft: Application = {
       id: application?.id ?? crypto.randomUUID(),
       userId: user.id,
       company: parsed.data.company,
@@ -135,13 +143,16 @@ export function ApplicationFormDialog({
       priority: parsed.data.priority,
       deadline: parsed.data.deadline ?? null,
       dateApplied: parsed.data.dateApplied ?? null,
+      interviewDate: parsed.data.interviewDate ?? null,
+      followUpDate: parsed.data.followUpDate ?? null,
       notes: parsed.data.notes,
       jobDescription: parsed.data.jobDescription,
       cvMatchScore: application?.cvMatchScore ?? null,
-      createdAt: application?.createdAt ?? now,
-      updatedAt: now,
+      statusHistory: application?.statusHistory ?? [],
+      createdAt: application?.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
-    onSave(app)
+    onSave(buildApplicationUpdate(application, draft))
     onOpenChange(false)
   }
 
@@ -235,7 +246,28 @@ export function ApplicationFormDialog({
               <Label>Date Applied</Label>
               <Input type="date" value={form.dateApplied} onChange={(e) => set("dateApplied", e.target.value)} />
             </div>
+            <div className="space-y-1.5">
+              <Label>Interview Date</Label>
+              <Input type="date" value={form.interviewDate} onChange={(e) => set("interviewDate", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Follow-up Date</Label>
+              <Input type="date" value={form.followUpDate} onChange={(e) => set("followUpDate", e.target.value)} />
+            </div>
           </div>
+          {application && application.statusHistory.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Status History</Label>
+              <div className="rounded-lg border border-border p-3 text-xs text-muted-foreground space-y-1 max-h-24 overflow-y-auto">
+                {[...application.statusHistory].reverse().map((entry, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="capitalize">{entry.status}</span>
+                    <span>{new Date(entry.changedAt).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Notes</Label>
             <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />

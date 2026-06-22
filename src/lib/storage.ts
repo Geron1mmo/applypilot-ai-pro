@@ -7,6 +7,7 @@ import type {
   Session,
   User,
 } from "@/types"
+import { normalizeApplication } from "@/lib/applications"
 
 const DATA_KEY = "applypilot_data"
 const SESSION_KEY = "applypilot_session"
@@ -91,7 +92,9 @@ export function saveUser(user: User): void {
 }
 
 export function getApplications(userId: string): Application[] {
-  return loadData().applications.filter((a) => a.userId === userId)
+  return loadData()
+    .applications.filter((a) => a.userId === userId)
+    .map((a) => normalizeApplication(a as Application))
 }
 
 export function saveApplication(app: Application): void {

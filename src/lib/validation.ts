@@ -45,6 +45,8 @@ export const applicationSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   deadline: z.string().nullable().optional(),
   dateApplied: z.string().nullable().optional(),
+  interviewDate: z.string().nullable().optional(),
+  followUpDate: z.string().nullable().optional(),
   notes: z.string().optional().default(""),
   jobDescription: z.string().optional().default(""),
 })

@@ -42,6 +42,11 @@ export interface Session {
   lastActivity: string
 }
 
+export interface StatusHistoryEntry {
+  status: ApplicationStatus
+  changedAt: string
+}
+
 export interface Application {
   id: string
   userId: string
@@ -59,9 +64,12 @@ export interface Application {
   priority: ApplicationPriority
   deadline: string | null
   dateApplied: string | null
+  interviewDate: string | null
+  followUpDate: string | null
   notes: string
   jobDescription: string
   cvMatchScore: number | null
+  statusHistory: StatusHistoryEntry[]
   createdAt: string
   updatedAt: string
 }

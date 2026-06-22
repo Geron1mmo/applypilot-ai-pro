@@ -1,4 +1,5 @@
-import type { Application, Document, User } from "@/types"
+import type { Application, ApplicationStatus, Document, User } from "@/types"
+import { normalizeApplication } from "@/lib/applications"
 
 export const DEMO_EMAIL = "demoapplypilot.local"
 export const DEMO_PASSWORD = "Demo12345!"
@@ -29,7 +30,7 @@ export function createDemoApplications(): Application[] {
   const daysAgo = (n: number) =>
     new Date(now.getTime() - n * 86400000).toISOString()
 
-  return [
+  const apps = [
     {
       id: "app-001",
       userId: DEMO_USER_ID,
@@ -174,7 +175,28 @@ export function createDemoApplications(): Application[] {
       createdAt: daysAgo(3),
       updatedAt: daysAgo(3),
     },
-  ]
+  ] as Application[]
+
+  return apps.map((app) =>
+    normalizeApplication({
+      ...app,
+      interviewDate:
+        app.status === "interview" || app.status === "technical"
+          ? daysAgo(-5)
+          : null,
+      followUpDate:
+        app.status === "applied" ? daysAgo(-3) : app.status === "saved" ? daysAgo(-10) : null,
+      statusHistory: [
+        { status: "saved", changedAt: app.createdAt },
+        ...(app.status !== "saved"
+          ? [{ status: "applied" as const, changedAt: app.dateApplied ?? app.createdAt }]
+          : []),
+        ...(app.status !== "saved" && app.status !== "applied"
+          ? [{ status: app.status as ApplicationStatus, changedAt: app.updatedAt }]
+          : []),
+      ],
+    })
+  )
 }
 
 export function createDemoDocuments(): Document[] {
