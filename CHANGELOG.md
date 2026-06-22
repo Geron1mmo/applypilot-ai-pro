@@ -2,6 +2,22 @@
 
 All notable changes to ApplyPilot AI Pro are documented here.
 
+## [1.2.0] - 2026-06-22
+
+### Added
+- Internationalization: Ukrainian (default), English, and Czech
+- Language switcher in top nav and Settings
+- Personal owner account for daily use (`oleg@applypilot.local`)
+- Weekly application goal widget on Dashboard
+- Save CV match score back to application from CV Analyzer
+- Open job URL button in Applications table
+- Multi-device sync FAQ in Help and Settings
+
+### Changed
+- All UI strings use translation system
+- Status and priority badges display localized labels
+- Auth toasts and relative dates respect selected language
+
 ## [1.1.0] - 2026-06-22
 
 ### Added
