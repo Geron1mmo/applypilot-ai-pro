@@ -18,6 +18,7 @@ import {
   YAxis,
 } from "recharts"
 import { useApplications } from "@/hooks/useApplications"
+import { RemindersPanel } from "@/components/dashboard/RemindersPanel"
 import { StatusBadge } from "@/components/applications/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -98,6 +99,8 @@ export function Dashboard() {
           </Card>
         ))}
       </div>
+
+      <RemindersPanel applications={applications} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
