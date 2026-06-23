@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react"
@@ -16,15 +17,6 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
-
-function resolveTheme(mode: ThemeMode): "dark" | "light" {
-  if (mode === "system") {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light"
-  }
-  return mode
-}
 
 function applyTheme(resolved: "dark" | "light") {
   const root = document.documentElement
@@ -45,9 +37,16 @@ export function ThemeProvider({
     return stored ?? "dark"
   })
 
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() =>
-    resolveTheme(theme)
+  const [systemPrefersDark, setSystemPrefersDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches
   )
+
+  const resolvedTheme = useMemo((): "dark" | "light" => {
+    if (theme === "system") {
+      return systemPrefersDark ? "dark" : "light"
+    }
+    return theme
+  }, [theme, systemPrefersDark])
 
   const setTheme = useCallback(
     (mode: ThemeMode) => {
@@ -63,19 +62,13 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
-    const resolved = resolveTheme(theme)
-    setResolvedTheme(resolved)
-    applyTheme(resolved)
-  }, [theme])
+    applyTheme(resolvedTheme)
+  }, [resolvedTheme])
 
   useEffect(() => {
     if (theme !== "system") return
     const mq = window.matchMedia("(prefers-color-scheme: dark)")
-    const handler = () => {
-      const resolved = resolveTheme("system")
-      setResolvedTheme(resolved)
-      applyTheme(resolved)
-    }
+    const handler = () => setSystemPrefersDark(mq.matches)
     mq.addEventListener("change", handler)
     return () => mq.removeEventListener("change", handler)
   }, [theme])

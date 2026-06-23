@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Save, ScanSearch, Sparkles } from "lucide-react"
 import { toast } from "sonner"
@@ -22,18 +22,25 @@ export function CVAnalyzer() {
   const { applications, upsert } = useApplications()
   const [searchParams] = useSearchParams()
   const [cvText, setCvText] = useState("")
-  const [jobText, setJobText] = useState("")
-  const [prefillCompany, setPrefillCompany] = useState<string | null>(null)
-  const [linkedAppId, setLinkedAppId] = useState<string | null>(null)
+  const [jobText, setJobText] = useState(() => searchParams.get("job") ?? "")
+  const [prefillCompany, setPrefillCompany] = useState<string | null>(() =>
+    searchParams.get("company")
+  )
+  const [linkedAppId, setLinkedAppId] = useState<string | null>(() =>
+    searchParams.get("appId")
+  )
+  const paramsKey = searchParams.toString()
+  const [syncedParamsKey, setSyncedParamsKey] = useState(paramsKey)
 
-  useEffect(() => {
+  if (paramsKey !== syncedParamsKey) {
+    setSyncedParamsKey(paramsKey)
     const job = searchParams.get("job")
     const company = searchParams.get("company")
     const appId = searchParams.get("appId")
     if (job) setJobText(job)
     if (company) setPrefillCompany(company)
     if (appId) setLinkedAppId(appId)
-  }, [searchParams])
+  }
 
   const [result, setResult] = useState<ReturnType<typeof analyzeCV> | null>(null)
   const [analyzing, setAnalyzing] = useState(false)

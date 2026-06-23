@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { Application, ApplicationStatus, ApplicationPriority, WorkMode } from "@/types"
 import { buildApplicationUpdate } from "@/lib/applications"
 import { applicationSchema } from "@/lib/validation"
@@ -29,6 +29,51 @@ interface Props {
   onSave: (app: Application) => void
 }
 
+const emptyForm = {
+  company: "",
+  role: "",
+  location: "",
+  workMode: "remote" as WorkMode,
+  salaryMin: "",
+  salaryMax: "",
+  currency: "USD",
+  jobUrl: "",
+  hrName: "",
+  hrEmail: "",
+  status: "saved" as ApplicationStatus,
+  priority: "medium" as ApplicationPriority,
+  deadline: "",
+  dateApplied: "",
+  interviewDate: "",
+  followUpDate: "",
+  notes: "",
+  jobDescription: "",
+}
+
+function getFormFromApplication(application?: Application | null) {
+  if (!application) return emptyForm
+  return {
+    company: application.company,
+    role: application.role,
+    location: application.location,
+    workMode: application.workMode,
+    salaryMin: application.salaryMin?.toString() ?? "",
+    salaryMax: application.salaryMax?.toString() ?? "",
+    currency: application.currency,
+    jobUrl: application.jobUrl,
+    hrName: application.hrName,
+    hrEmail: application.hrEmail,
+    status: application.status,
+    priority: application.priority,
+    deadline: application.deadline?.split("T")[0] ?? "",
+    dateApplied: application.dateApplied?.split("T")[0] ?? "",
+    interviewDate: application.interviewDate?.split("T")[0] ?? "",
+    followUpDate: application.followUpDate?.split("T")[0] ?? "",
+    notes: application.notes,
+    jobDescription: application.jobDescription,
+  }
+}
+
 export function ApplicationFormDialog({
   open,
   onOpenChange,
@@ -38,73 +83,17 @@ export function ApplicationFormDialog({
   const { user } = useAuth()
   const { t } = useI18n()
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [form, setForm] = useState({
-    company: "",
-    role: "",
-    location: "",
-    workMode: "remote" as WorkMode,
-    salaryMin: "",
-    salaryMax: "",
-    currency: "USD",
-    jobUrl: "",
-    hrName: "",
-    hrEmail: "",
-    status: "saved" as ApplicationStatus,
-    priority: "medium" as ApplicationPriority,
-    deadline: "",
-    dateApplied: "",
-    interviewDate: "",
-    followUpDate: "",
-    notes: "",
-    jobDescription: "",
-  })
+  const [form, setForm] = useState(() => getFormFromApplication(application))
+  const formKey = `${open}-${application?.id ?? "new"}`
+  const [trackedFormKey, setTrackedFormKey] = useState(formKey)
 
-  useEffect(() => {
-    if (application) {
-      setForm({
-        company: application.company,
-        role: application.role,
-        location: application.location,
-        workMode: application.workMode,
-        salaryMin: application.salaryMin?.toString() ?? "",
-        salaryMax: application.salaryMax?.toString() ?? "",
-        currency: application.currency,
-        jobUrl: application.jobUrl,
-        hrName: application.hrName,
-        hrEmail: application.hrEmail,
-        status: application.status,
-        priority: application.priority,
-        deadline: application.deadline?.split("T")[0] ?? "",
-        dateApplied: application.dateApplied?.split("T")[0] ?? "",
-        interviewDate: application.interviewDate?.split("T")[0] ?? "",
-        followUpDate: application.followUpDate?.split("T")[0] ?? "",
-        notes: application.notes,
-        jobDescription: application.jobDescription,
-      })
-    } else {
-      setForm({
-        company: "",
-        role: "",
-        location: "",
-        workMode: "remote",
-        salaryMin: "",
-        salaryMax: "",
-        currency: "USD",
-        jobUrl: "",
-        hrName: "",
-        hrEmail: "",
-        status: "saved",
-        priority: "medium",
-        deadline: "",
-        dateApplied: "",
-        interviewDate: "",
-        followUpDate: "",
-        notes: "",
-        jobDescription: "",
-      })
+  if (formKey !== trackedFormKey) {
+    setTrackedFormKey(formKey)
+    if (open) {
+      setForm(getFormFromApplication(application))
+      setErrors({})
     }
-    setErrors({})
-  }, [application, open])
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

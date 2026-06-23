@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -35,6 +34,19 @@ export function I18nProvider({
     return stored ?? "uk"
   })
 
+  const [prevUserId, setPrevUserId] = useState(userId)
+
+  if (userId !== prevUserId) {
+    setPrevUserId(userId)
+    if (userId) {
+      const lang = getSettings(userId).language
+      if (lang) {
+        setLocaleState(lang)
+        localStorage.setItem("applypilot_locale", lang)
+      }
+    }
+  }
+
   const setLocale = useCallback(
     (l: Locale) => {
       setLocaleState(l)
@@ -46,16 +58,6 @@ export function I18nProvider({
     },
     [userId]
   )
-
-  useEffect(() => {
-    if (userId) {
-      const lang = getSettings(userId).language
-      if (lang && lang !== locale) {
-        setLocaleState(lang)
-        localStorage.setItem("applypilot_locale", lang)
-      }
-    }
-  }, [userId])
 
   const t = useMemo(() => createTranslator(locale), [locale])
 

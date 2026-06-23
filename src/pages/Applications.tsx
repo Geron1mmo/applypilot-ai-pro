@@ -37,15 +37,26 @@ export function Applications() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"date" | "company">("date")
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(
+    () => searchParams.get("action") === "new"
+  )
   const [editing, setEditing] = useState<Application | null>(null)
+  const [handledNewAction, setHandledNewAction] = useState<string | null>(null)
+
+  const newActionKey =
+    searchParams.get("action") === "new" ? searchParams.toString() : null
+
+  if (newActionKey && newActionKey !== handledNewAction) {
+    setHandledNewAction(newActionKey)
+    setEditing(null)
+    setDialogOpen(true)
+  }
 
   useEffect(() => {
     if (searchParams.get("action") === "new") {
-      setEditing(null)
-      setDialogOpen(true)
-      searchParams.delete("action")
-      setSearchParams(searchParams, { replace: true })
+      const next = new URLSearchParams(searchParams)
+      next.delete("action")
+      setSearchParams(next, { replace: true })
     }
   }, [searchParams, setSearchParams])
 
